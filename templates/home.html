@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF Vector Search</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container py-4">
+    <h2 class="mb-4 text-center">PDF Upload & Search</h2>
+
+    <!-- Flash Message -->
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div id="flash-message" class="alert alert-info">
+            {{ messages[0] }}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Tabs for Upload and All Data -->
+    <ul class="nav nav-tabs" id="pdfTab" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link {% if not query %}active{% endif %}" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload" type="button">Upload</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button">All Data</button>
+        </li>
+    </ul>
+
+    <div class="tab-content pt-3" id="pdfTabContent">
+        <div class="tab-pane fade {% if not query %}show active{% endif %}" id="upload" role="tabpanel">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="pdf_files" class="form-label">Upload PDF(s):</label>
+                    <input type="file" name="pdf_files" id="pdf_files" multiple class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </form>
+        </div>
+
+        <div class="tab-pane fade" id="all" role="tabpanel">
+            {% if previews %}
+            <div class="list-group mt-3">
+                {% for p in previews %}
+                <div class="list-group-item">
+                    <h6>{{ p.filename }}</h6>
+                    <p>{{ p.snippet|safe }}</p>
+                    <a href="{{ p.link }}" class="btn btn-sm btn-outline-secondary" target="_blank">View PDF</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="mt-3">No uploaded files found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Search Always Visible -->
+    <div class="mt-5" id="search">
+        <form method="POST" action="{{ url_for('home') }}">
+            <h3>Search PDFs:</h3>
+            <div class="input-group mb-3">
+                <input type="text" name="query" placeholder="Search PDF content..." class="form-control" value="{{ query }}">
+                <button type="submit" class="btn btn-success">Search</button>
+            </div>
+        </form>
+
+        {% if results %}
+        <h5>Search Results ({{ results|length }})</h5>
+        <div class="list-group">
+            {% for result in results %}
+            <div class="list-group-item">
+                <h6>{{ result.filename }} <small class="text-muted float-end">Score: {{ result.score }}</small></h6>
+                <p>{{ result.snippet|safe }}</p>
+                <ul class="mb-2">
+                    {% if result.bhk %}<li><strong>BHK:</strong> {{ result.bhk }}</li>{% endif %}
+                    {% if result.area %}<li><strong>Area:</strong> {{ result.area }}</li>{% endif %}
+                    {% if result.price %}<li><strong>Price:</strong> {{ result.price }}</li>{% endif %}
+                    {% if result.floor %}<li><strong>Floor:</strong> {{ result.floor }}</li>{% endif %}
+                </ul>
+                <a href="{{ result.link }}" class="btn btn-sm btn-outline-primary" target="_blank">View PDF</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+
+</body>
+</html>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    setTimeout(function() {
+        var flash = document.getElementById('flash-message');
+        if (flash) {
+            flash.style.opacity = '0';
+            setTimeout(() => flash.style.display = 'none', 500); // hide after fade-out
+        }
+    }, 8000);
+</script>
